@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Weather App</title>
+        <link rel="stylesheet" href="style.css" />
+        <!-- favicon -->
+        <link rel="icon" type="image/x-icon" href="favicon.png" />
+        <!-- google fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body class="mood-stormy">
+        <!-- Atmospheric BG Layer -->
+        <div class="bg-scene" aria-hidden="true">
+            <div class="bg-gradient"></div>
+            <div class="cloud-layer cloud-layer--back"></div>
+            <div class="cloud-layer cloud-layer--mid"></div>
+            <div class="cloud-layer cloud-layer--front"></div>
+            <div class="rain-overlay"></div>
+            <div class="lightning-flash" id="lightningFlash"></div>
+            <div class="bg-vignette"></div>
+        </div>
+
+        <!-- App Shell - Mobile Container -->
+        <div class="app-shell" role="main">
+            <!-- Loading Screen -->
+            <div
+                class="screen screen--loading"
+                id="screenLoading"
+                aria-live="polite"
+            >
+                <div class="loading-orb">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <circle
+                            cx="30"
+                            cy="30"
+                            r="26"
+                            stroke="rgba(255,255,255,0.15)"
+                            stroke-width="2"
+                        />
+                        <path
+                            d="M30 4 A26 26 0 0 1 56 30"
+                            stroke="white"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </div>
+                <p class="loading-text">Reading the sky…</p>
+            </div>
+
+            <!-- Home Screen -->
+            <section
+                class="screen screen--home active"
+                id="screenHome"
+                aria-label="Current weather"
+            >
+                <!-- Top Status Bar -->
+                <header class="status-bar">
+                    <div class="status-side status-left">
+                        <span class="status-time" id="statusTime">9:41</span>
+                    </div>
+                    <div class="status-center">
+                        <button
+                            class="location-pill"
+                            id="locationPill"
+                            aria-label="Current location"
+                        >
+                            <svg
+                                class="icon-loc"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                            >
+                                <path
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                />
+                            </svg>
+                            <span id="cityName">Dhaka</span>
+                            <svg
+                                class="icon-chevron"
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                    </div>
+                    <time
+                        class="status-date-block"
+                        id="statusDateBlock"
+                        datetime=""
+                    >
+                        <span class="status-date-day" id="statusDateDay"
+                            >Wednesday</span
+                        >
+                        <span class="status-date-num" id="statusDateNum"
+                            >May 20</span
+                        >
+                    </time>
+                </header>
+
+                <!-- Scrollable Content Area -->
+                <div class="scroll-area" id="homeScrollArea">
+                    <!-- Hero Weather Block -->
+                    <div class="hero-block">
+                        <div
+                            class="hero-illustration"
+                            id="heroIllustration"
+                            aria-hidden="true"
+                        >
+                            <!-- SVG weather illustration injected by JS -->
+                        </div>
+
+                        <div class="hero-temp-group">
+                            <span class="hero-temp" id="heroTemp">24°</span>
+                            <span class="hero-unit">C</span>
+                        </div>
+
+                        <p class="hero-condition" id="heroCondition">
+                            Thunderstorm
+                        </p>
+
+                        <div class="hero-range">
+                            <span class="range-item range-high">
+                                <svg
+                                    width="10"
+                                    height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                >
+                                    <path d="M7 14l5-5 5 5z" />
+                                </svg>
+                                <span id="tempHigh">28°</span>
+                            </span>
+                            <span class="range-sep">·</span>
+                            <span class="range-item range-low">
+                                <svg
+                                    width="10"
+                                    height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                >
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                                <span id="tempLow">19°</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ─── Stats Glass Card ─── -->
+                    <div
+                        class="glass-card stats-card"
+                        role="region"
+                        aria-label="Weather statistics"
+                    >
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-icon-wrap">
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+                                        <path
+                                            d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <span class="stat-value" id="statPrecip"
+                                    >78%</span
+                                >
+                                <span class="stat-label">Rain</span>
+                            </div>
+
+                            <div class="stat-item">
+                                <div class="stat-icon-wrap">
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+                                        <path
+                                            d="M12 2a6 6 0 0 1 6 6c0 4-6 12-6 12S6 12 6 8a6 6 0 0 1 6-6z"
+                                        />
+                                        <circle cx="12" cy="8" r="2" />
+                                    </svg>
+                                </div>
+                                <span class="stat-value" id="statHumidity"
+                                    >85%</span
+                                >
+                                <span class="stat-label">Humidity</span>
+                            </div>
+
+                            <div class="stat-item">
+                                <div class="stat-icon-wrap">
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+                                        <path
+                                            d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"
+                                        />
+                                    </svg>
+                                </div>
+                                <span class="stat-value" id="statWind"
+                                    >22 km/h</span
+                                >
+                                <span class="stat-label">Wind</span>
+                            </div>
+
+                            <div class="stat-item">
+                                <div class="stat-icon-wrap">
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+                                        <path
+                                            d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <span class="stat-value" id="statFeelsLike"
+                                    >27°</span
+                                >
+                                <span class="stat-label">Feels Like</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ─── Hourly Forecast ─── -->
+                    <div
+                        class="section-block"
+                        role="region"
+                        aria-label="Hourly forecast"
+                    >
+                        <div class="section-header">
+                            <h2 class="section-title">Today</h2>
+                            <button
+                                class="section-more"
+                                aria-label="View all hours"
+                            >
+                                All day
+                            </button>
+                        </div>
+
+                        <div class="hourly-scroll" role="list" id="hourlyList">
+                            <!-- Hourly items injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- ─── 7-Day Forecast ─── -->
+                    <div
+                        class="section-block glass-card"
+                        role="region"
+                        aria-label="7-day forecast"
+                    >
+                        <div class="section-header">
+                            <h2 class="section-title">7-Day Forecast</h2>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="3"
+                                    y="4"
+                                    width="18"
+                                    height="18"
+                                    rx="2"
+                                    ry="2"
+                                />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                        </div>
+                        <div
+                            class="forecast-list"
+                            role="list"
+                            id="forecastList"
+                        >
+                            <!-- 7-day items injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- ─── UV & Sunrise Row ─── -->
+                    <div class="two-col-row">
+                        <div
+                            class="glass-card mini-card"
+                            role="region"
+                            aria-label="UV Index"
+                        >
+                            <span class="mini-card-label">UV Index</span>
+                            <div class="uv-bar-track" aria-hidden="true">
+                                <div
+                                    class="uv-bar-fill"
+                                    id="uvBarFill"
+                                    style="width: 45%"
+                                ></div>
+                            </div>
+                            <span class="mini-card-value" id="uvValue"
+                                >Moderate · 4</span
+                            >
+                        </div>
+                        <div
+                            class="glass-card mini-card"
+                            role="region"
+                            aria-label="Sunrise and Sunset"
+                        >
+                            <span class="mini-card-label">Sun</span>
+                            <div class="sun-arc" aria-hidden="true">
+                                <svg
+                                    viewBox="0 0 100 55"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M8 50 Q50 -10 92 50"
+                                        stroke="rgba(255,255,255,0.12)"
+                                        stroke-width="1.5"
+                                        fill="none"
+                                    />
+                                    <path
+                                        d="M8 50 Q50 -10 92 50"
+                                        stroke="url(#sunGrad)"
+                                        stroke-width="1.5"
+                                        fill="none"
+                                        stroke-dasharray="130"
+                                        stroke-dashoffset="60"
+                                    />
+                                    <circle
+                                        cx="64"
+                                        cy="22"
+                                        r="4"
+                                        fill="#FDB97D"
+                                        opacity="0.9"
+                                    />
+                                    <defs>
+                                        <linearGradient
+                                            id="sunGrad"
+                                            x1="0"
+                                            y1="0"
+                                            x2="100"
+                                            y2="0"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stop-color="#f59e0b"
+                                                stop-opacity="0.8"
+                                            />
+                                            <stop
+                                                offset="100%"
+                                                stop-color="#fb923c"
+                                                stop-opacity="0.3"
+                                            />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div class="sun-times">
+                                <span>↑ 05:28</span>
+                                <span>↓ 18:42</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom padding for nav bar -->
+                    <div class="nav-spacer" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <!-- Search Screen -->
+            <section
+                class="screen screen--search"
+                id="screenSearch"
+                aria-label="Search cities"
+                aria-hidden="true"
+            >
+                <header class="search-header">
+                    <button
+                        class="back-btn"
+                        id="searchBackBtn"
+                        aria-label="Go back"
+                    >
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        >
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </button>
+                    <div class="search-input-wrap">
+                        <svg
+                            class="search-icon-inp"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                            type="search"
+                            class="search-input"
+                            id="searchInput"
+                            placeholder="Search city or place…"
+                            autocomplete="off"
+                            aria-label="Search city"
+                        />
+                    </div>
+                </header>
+
+                <div class="search-body">
+                    <!-- Recent / Results label -->
+                    <p class="search-section-label" id="searchLabel">Recent</p>
+
+                    <!-- City result cards -->
+                    <div class="city-results" id="cityResults" role="list">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forecast Screen -->
+            <section
+                class="screen screen--forecast"
+                id="screenForecast"
+                aria-label="Extended forecast"
+                aria-hidden="true"
+            >
+                <header class="forecast-header">
+                    <h1 class="forecast-screen-title">Forecast</h1>
+                    <div class="forecast-tabs" role="tablist">
+                        <button
+                            class="ftab active"
+                            role="tab"
+                            aria-selected="true"
+                            data-tab="daily"
+                        >
+                            Daily
+                        </button>
+                        <button
+                            class="ftab"
+                            role="tab"
+                            aria-selected="false"
+                            data-tab="hourly"
+                        >
+                            Hourly
+                        </button>
+                    </div>
+                </header>
+
+                <div
+                    class="scroll-area forecast-scroll-area"
+                    id="forecastScrollArea"
+                >
+                    <!-- Extended forecast cards -->
+                    <div
+                        class="ext-forecast-grid"
+                        id="extForecastGrid"
+                        role="list"
+                    >
+                        <!-- Injected by JS -->
+                    </div>
+                    <div class="nav-spacer" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <!-- Settings Screen -->
+            <section
+                class="screen screen--settings"
+                id="screenSettings"
+                aria-label="Settings"
+                aria-hidden="true"
+            >
+                <header class="settings-header">
+                    <h1 class="settings-title">Settings</h1>
+                </header>
+
+                <div class="scroll-area settings-scroll">
+                    <div class="settings-group glass-card">
+                        <p class="settings-group-label">Units</p>
+                        <div class="settings-row">
+                            <span class="settings-row-label">Temperature</span>
+                            <div
+                                class="toggle-group"
+                                role="group"
+                                aria-label="Temperature unit"
+                            >
+                                <button class="toggle-opt active" data-unit="C">
+                                    °C
+                                </button>
+                                <button class="toggle-opt" data-unit="F">
+                                    °F
+                                </button>
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-row-label">Wind Speed</span>
+                            <div
+                                class="toggle-group"
+                                role="group"
+                                aria-label="Wind speed unit"
+                            >
+                                <button
+                                    class="toggle-opt active"
+                                    data-wind="kmh"
+                                >
+                                    km/h
+                                </button>
+                                <button class="toggle-opt" data-wind="mph">
+                                    mph
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group glass-card">
+                        <p class="settings-group-label">Appearance</p>
+                        <div class="settings-row">
+                            <span class="settings-row-label"
+                                >Dynamic Background</span
+                            >
+                            <label
+                                class="switch"
+                                aria-label="Toggle dynamic background"
+                            >
+                                <input type="checkbox" checked id="toggleBg" />
+                                <span class="switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-row-label"
+                                >Lightning Effect</span
+                            >
+                            <label
+                                class="switch"
+                                aria-label="Toggle lightning effect"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked
+                                    id="toggleLightning"
+                                />
+                                <span class="switch-track"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group glass-card about-card">
+                        <p class="settings-group-label">About</p>
+                        <p class="about-text">Nimbus Weather v1.0</p>
+                        <p class="about-sub">
+                            Built with vanilla HTML, CSS & JS
+                        </p>
+                    </div>
+
+                    <div class="nav-spacer" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="bottom-nav">
+                <!-- prettier-ignore -->
+                <div class="nav-pill">
+                    <button class="nav-item active" data-screen="home" aria-label="Home" aria-current="page" >
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" >
+                                <path
+                                    d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                                />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                        </span>
+                        <span class="nav-label"></span>
+                    </button>
+
+                    <button class="nav-item" data-screen="search" aria-label="Search" >
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                        </span>
+                        <span class="nav-label"></span>
+                    </button>
+
+                    <button class="nav-item" data-screen="forecast" aria-label="Forecast" >
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" >
+                                <polyline
+                                    points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                />
+                            </svg>
+                        </span>
+                        <span class="nav-label"></span>
+                    </button>
+
+                    <button class="nav-item" data-screen="settings" aria-label="Settings" >
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" >
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                        </span>
+                        <span class="nav-label"></span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+        <!-- /app-shell -->
+
+        <script src="script.js"></script>
+    </body>
+</html>
